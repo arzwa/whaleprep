@@ -7,8 +7,6 @@ orthogroup inference. So it basically performs
 */
 fasta = Channel.fromPath("$params.fasta/*")
 tools = "$params.tools"
-// samplefreq = "$params.samplefreq"
-// ngen = "$params.ngen"
 
 /*
 PRANK alignment, uses the default PRANK parameters and converts it to a nexus file
@@ -22,6 +20,8 @@ process PrankAlignment {
 
     script:
     """
+    module load prank
+    module load python
     prank -d=$fasta -o=${fasta}
     OMP_NUM_THREADS=1 python3 $tools convert_aln \
         -i ${fasta}.best.fas -if "fasta" -o ${fasta}.nex -of "nexus"
@@ -43,6 +43,8 @@ process MrBayesMCMC {
 
     script:
     """
+    module load mrbayes
+    module load python
     mkdir ${aln}_mb
     sed  "s/|/_/g" ${aln} > ${aln}_mb/${aln}  # get alignment (replace | by _)
     cd ${aln}_mb
@@ -51,8 +53,8 @@ process MrBayesMCMC {
     echo "prset aamodelpr=fixed(lg)" >> ./mbconf.txt  # LG model
     echo "lset rates=gamma" >> ./mbconf.txt           # G  model
     echo "mcmcp diagnfreq=100" >> ./mbconf.txt        # diagnostics every 100 gns
-    echo "mcmcp samplefreq=10" >> ./mbconf.txt        # sample every 10 gns
-    echo "mcmc ngen=11000 savebrlens=yes nchains=1" >> ./mbconf.txt
+    echo "mcmcp samplefreq=$params.samplefreq" >> ./mbconf.txt        # sample every 10 gns
+    echo "mcmc ngen=$params.ngen savebrlens=yes nchains=1" >> ./mbconf.txt
     echo "sumt" >> ./mbconf.txt
     echo "sump" >> ./mbconf.txt
     echo "quit" >> ./mbconf.txt
@@ -67,7 +69,7 @@ process MrBayesMCMC {
 Run ALEobserve to get the CCD. 
 */
 process AleObserve {
-    publishDir "ale"
+    publishDir "${params.out}"
 
     input:
     file mb
@@ -77,6 +79,7 @@ process AleObserve {
 
     script:
     """
-    ALEobserve $mb
+    module load ALE_trees
+    ALEobserve $mb burnin=$params.burnin
     """
 }

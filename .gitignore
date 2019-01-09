@@ -1,0 +1,5 @@
+.nextflow*
+.nextflow/
+test/
+work/
+nf-out/
