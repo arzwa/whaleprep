@@ -1,33 +1,3 @@
-/*
-Nextflow pipeline for performing the preparatory analyses required for `whale`, this excludes
-orthogroup inference. So it basically performs
-    (1) alignment with PRANK
-    (2) posterior sampling using MCMC with MrBayes
-    (3) CCD construction using ALEobserve
-*/
-fasta = Channel.fromPath("$params.fasta/*")
-tools = "$params.tools"
-
-/*
-PRANK alignment, uses the default PRANK parameters and converts it to a nexus file
-*/
-process PrankAlignment {
-    input:
-    file fasta
-
-    output:
-    file "${fasta}.nex" into aln
-
-    script:
-    """
-    module load prank
-    module load python
-    prank -d=$fasta -o=${fasta}
-    OMP_NUM_THREADS=1 python3 $tools convert_aln \
-        -i ${fasta}.best.fas -if "fasta" -o ${fasta}.nex -of "nexus"
-    """
-}
-
 
 /*
 Posterior inference using MrBayes. Currently hardcoded to LG+G4 model, with MCMC
@@ -66,7 +36,7 @@ process MrBayesMCMC {
 
 
 /*
-Run ALEobserve to get the CCD. 
+Run ALEobserve to get the CCD.
 */
 process AleObserve {
     publishDir "${params.out}"
