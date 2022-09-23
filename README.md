@@ -1,3 +1,5 @@
+**Note: make sure to adjust the default settings so that your gene tree samples have adequately converged (high ESS, low ASDF, etc.)**
+
 # Whaleprep
 
 Arthur Zwaenepoel (2018-2019)
